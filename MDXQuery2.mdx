@@ -1,0 +1,120 @@
+--1. Cac don hang thuong den tu dau
+SELECT [Measures].[Fact Shipment1 Count] on columns,
+ORDER ([Dim Location].[Tinh].Members,[Measures].[Fact Shipment1 Count],desc) on rows
+FROM [Ecommerce DW 1]
+--Top tinh co nhu cau cao nhat va thap nhat
+GO
+SELECT [Measures].[Fact Order Count] on columns,
+NON EMPTY UNION (TOPCOUNT ([Dim Location].[Tinh].CHILDREN,2,[Measures].[Fact Order Count]), 
+BOTTOMCOUNT ([Dim Location].[Tinh].CHILDREN,2,[Measures].[Fact Order Count])) ON ROWS
+FROM [Ecommerce DW 1]
+
+SELECT [Measures].[Fact Order1 Count] on columns,
+NON EMPTY BOTTOMCOUNT ([Dim Location].[Tinh].CHILDREN,10,[Measures].[Fact Order Count]) ON ROWS
+FROM [Ecommerce DW 1]
+
+--2.
+SELECT [Measures].[Fact Order Count] ON COLUMNS,
+NON EMPTY TOPCOUNT([Dim Product].[Loai San Pham].CHILDREN,2,[Measures].[Fact Order Count]) ON ROWS
+FROM [Ecommerce DW 1]
+--Theo tinh thanh
+SELECT [Measures].[Fact Order Count] ON COLUMNS,
+NON EMPTY GENERATE ([Dim Product].[Loai San Pham].[Loai San Pham].MEMBERS,
+TOPCOUNT([Dim Location].[Tinh].[Tinh].Members*[Dim Product].[Loai San Pham].CURRENTMEMBER,1,[Measures].[Fact Order Count])) ON ROWS
+FROM [Ecommerce DW 1]
+--4. Doanh thu theo tung mat hang
+SELECT [Measures].[Tong Tien Dong Don Hang] ON COLUMNS,
+ORDER ([Dim Product].[Loai San Pham].CHILDREN,[Measures].[Tong Tien Dong Don Hang],DESC) ON ROWS
+FROM [Ecommerce DW 1]
+--5. Thong ke doanh thu theo ngay thang quy nam//
+SELECT [Measures].[Tong Tien Dong Don Hang] ON COLUMNS,
+DRILLDOWNLEVEL(DRILLDOWNLEVEL(DRILLDOWNLEVEL(DRILLDOWNLEVEL([Dim Order Date].[PC_Date])))) ON ROWS
+FROM [Ecommerce DW 1]
+--TOP DOANH THU THEO TINH
+SELECT [Measures].[Tong Tien Dong Don Hang] ON COLUMNS,
+ORDER([Dim Location].[Tinh].CHILDREN,[Measures].[Tong Tien Dong Don Hang],DESC) ON ROWS
+FROM [Ecommerce DW 1]
+
+
+--Ty le van chuyen
+SELECT PERCENT(
+
+SELECT [Measures].[Fact Order Count] ON COLUMNS,
+NON EMPTY GENERATE([Dim Location].[Tinh].CHILDREN,TOPCOUNT([Dim Location].[Tinh].CURRENTMEMBER*[Dim Package].[Ma TT Phan Phoi].CHILDREN,1,[Measures].[Fact Order Count])) ON ROWS
+FROM [Ecommerce DW 1]
+
+
+
+SELECT [Measures].[Fact Shipment1 Count] ON COLUMNS,
+FILTER([Dim Location].[Tinh].CHILDREN,[Dim Package].[Ngay Hen Giao Hang].CHILDREN<[Dim Package].[Ngay Nhan Hang].CHILDREN) ON ROWS
+FROM [Ecommerce DW 1]
+
+
+WITH 
+MEMBER [Measures].[z] AS
+CDate([Dim Package].[Ngay Hen Giao Hang].CURRENTMEMBER.NAME), FORMAT_STRING = "yyyyMMdd"
+SELECT [Measures].[z] ON COLUMNS,
+[Dim Package].[Ngay Hen Giao Hang].children on ROWS
+FROM [Ecommerce DW 1]
+
+
+SELECT [Measures].[Fact Shipment1 Count] ON COLUMNS,
+NON EMPTY GENERATE([Dim Location].[Tinh].CHILDREN,EXISTS([Dim Location].[Tinh].CURRENTMEMBER,[Dim Package].[Ngay Hen Giao Hang Lai].CHILDREN)) ON ROWS
+FROM [Ecommerce DW 1]
+
+
+
+WITH MEMBER [Measures].[TB] AS 
+SUM ([Measures].[TGVC])
+SELECT [Measures].[TB] ON COLUMNS,
+[Dim Location].[Tinh].CHILDREN ON ROWS
+FROM [Ecommerce DW 1]
+
+
+
+
+
+-----------
+
+SELECT [Measures].[Fact Order1 Count] ON COLUMNS,
+GENERATE([Dim Product1].[Loai San Pham].CHILDREN,TOPCOUNT([Dim Product1].[Loai San Pham].CURRENTMEMBER*[Dim Product1].[Ma San Pham].CHILDREN,1,[Measures].[Fact Order1 Count])) ON ROWS
+FROM [Ecommerce DW1 1]
+
+SELECT [Measures].[Fact Order1 Count] ON COLUMNS,
+NON EMPTY FILTER (TOPCOUNT([Dim Location1].[Tinh].CHILDREN,10,[Measures].[Fact Order1 Count]),[Dim Product1].[Ma San Pham].&[267100557] OR [Dim Product1].[Ma San Pham].&[352900235]) ON ROWS
+FROM [Ecommerce DW1 1]
+
+SELECT [Measures].[Fact Order Count] ON COLUMNS,
+FILTER([Dim Location].[Tinh].CHILDREN,[Measures].[Do tre] > 0) ON ROWS
+FROM [Ecommerce DW 1]
+
+SELECT [Measures].[Do tre] ON COLUMNS,
+NON EMPTY FILTER([Dim Location].[Tinh].CHILDREN, [Dim Package].[Ma Kho Xuat Hang].&[200]) ON ROWS
+FROM [Ecommerce DW 1]
+
+SELECT [Measures].[Fact Shipment1 Count] ON COLUMNS,
+FILTER([Dim Location].[Tinh].CHILDREN,[Dim Package].[Ngay Xuat Hang]=[Dim Package].[Ngay Van Chuyen]) ON ROWS
+FROM [Ecommerce DW 1]
+
+SELECT [Measures].[TGVC] ON COLUMNS,
+GENERATE ([Dim Location].[Tinh].CHILDREN,ORDER([Dim Package].[Ma Goi Hang].CHILDREN,[Measures].[TGVC],DESC)) ON ROWS
+FROM [Ecommerce DW 1]
+
+---- Ty trong kho hang tren cac tinh
+SELECT [Measures].[Fact Shipment1 Count] ON COLUMNS,
+NON EMPTY GENERATE([Dim Location].[Tinh].CHILDREN,(TOPCOUNT([Dim Package].[Ma Kho Xuat Hang].CHILDREN,1,[Measures].[Fact Shipment1 Count]),[Dim Location].[Tinh])) ON ROWS
+FROM [Ecommerce DW 1]
+
+--- 
+SELECT [Measures].[Fact Shipment1 Count] ON COLUMNS,
+FILTER([Dim Location].[Tinh].CHILDREN,CDate([Dim Package].[Ngay Nhan Hang])<=CDate([Dim Package].[Ngay Hen Giao Hang])) ON ROWS
+FROM [Ecommerce DW 1]
+
+SELECT [Measures].[Fact Shipment1 Count] ON COLUMNS,
+[Dim Location].[Tinh].CHILDREN ON ROWS
+FROM [Ecommerce DW 1]
+
+
+
+
+
